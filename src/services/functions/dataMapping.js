@@ -75,6 +75,11 @@ export const mapOrderingPayload = (submitData) => {
         code: items?.material?.uom?.code,
         description: items?.material?.uom?.description,
       },
+      account_title: {
+        id: items?.account_title?.account_title?.id,
+        code: items?.account_title?.account_title?.code,
+        name: items?.account_title?.account_title?.name,
+      },
       quantity: items?.quantity,
       remarks: items?.remarks || "",
     })),
@@ -85,7 +90,7 @@ export const mapOrderingPayload = (submitData) => {
 
 export const mapPayloadApproverImport = (submitData, charging) => {
   const chargingValue = charging?.find(
-    (c) => c.code === submitData?.charging_code?.toString()
+    (c) => c.code === submitData?.charging_code?.toString(),
   );
 
   const payload = {
@@ -140,10 +145,10 @@ export const mapPayloadApproverImport = (submitData, charging) => {
 
 export const mapPayloadUserImport = (submitData, charging) => {
   const chargingValue = charging?.find(
-    (c) => c.code === submitData?.charging?.toString()
+    (c) => c.code === submitData?.charging?.toString(),
   );
   const scopeValue = charging?.find(
-    (c) => c.code === submitData?.scope_order?.toString()
+    (c) => c.code === submitData?.scope_order?.toString(),
   );
 
   const payload = {
@@ -307,7 +312,7 @@ export const mapOrderingData = (
   chargingData,
   customers,
   materialsData,
-  orderType
+  orderType,
 ) => {
   const mapData = {
     order_no: ordering?.order_no || "",
@@ -323,23 +328,23 @@ export const mapOrderingData = (
     customer:
       approveOrdering || viewOrdering || serveOrdering
         ? chargingData?.find(
-            (c) => c?.sync_id === ordering?.customer?.id?.toString()
+            (c) => c?.sync_id === ordering?.customer?.id?.toString(),
           )
         : customers?.find(
-            (c) => c?.charging_id === ordering?.customer?.id?.toString()
+            (c) => c?.charging_id === ordering?.customer?.id?.toString(),
           ) || null,
     charging:
       approveOrdering || viewOrdering || serveOrdering
         ? chargingData?.find(
-            (c) => c?.sync_id === ordering?.charging?.id?.toString()
+            (c) => c?.sync_id === ordering?.charging?.id?.toString(),
           )
         : customers?.find(
-            (c) => c?.charging_id === ordering?.charging?.id?.toString()
+            (c) => c?.charging_id === ordering?.charging?.id?.toString(),
           ) || null,
     date_needed: dayjs(ordering?.date_needed),
     order: ordering?.order?.map((item) => {
       const material = materialsData?.find(
-        (mats) => mats?.code === item?.material?.code
+        (mats) => mats?.code === item?.material?.code,
       );
 
       return {
@@ -357,7 +362,7 @@ export const mapOrderingData = (
         quantity: item?.quantity || 1,
         account_title:
           material?.account_title?.find(
-            (title) => title?.account_title?.code === item?.account_title?.code
+            (title) => title?.account_title?.code === item?.account_title?.code,
           ) || null,
         remarks: item?.remarks || "",
       };

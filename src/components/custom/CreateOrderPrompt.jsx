@@ -65,6 +65,12 @@ const CreateOrderPrompt = () => {
     { name: "No.", type: "index" },
     { name: "Code", value: "material", child: "code", type: "parent" },
     { name: "Material", value: "material", child: "name", type: "parent" },
+    {
+      name: "Account Title",
+      value: "account_title",
+      child: "name",
+      type: "parent",
+    },
     { name: "Uom", value: "uom", child: "code", type: "parent" },
     { name: "Quantity", value: "quantity" },
 

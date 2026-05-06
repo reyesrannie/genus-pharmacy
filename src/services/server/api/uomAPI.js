@@ -1,4 +1,5 @@
 import { serverAPI } from "../request/serverAPI";
+import { setUomData } from "../slice/valuesSlice";
 
 export const uomAPI = serverAPI.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,6 +11,13 @@ export const uomAPI = serverAPI.injectEndpoints({
         params: payload,
       }),
       providesTags: ["Uom"],
+      async onQueryStarted(payload, { dispatch, getState, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (Array.isArray(data)) dispatch(setUomData(data));
+          else dispatch(setUomData(data?.result));
+        } catch (error) {}
+      },
     }),
     createUom: builder.mutation({
       query: (payload) => ({

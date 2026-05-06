@@ -177,6 +177,7 @@ const OrderingModal = () => {
           category: null,
           uom: null,
           quantity: "",
+          account_title: null,
           remarks: "",
         },
       ],
@@ -204,6 +205,8 @@ const OrderingModal = () => {
       ...mapOrderingPayload(items),
       id: ordering !== null ? ordering?.id : null,
     };
+
+    console.log(payload);
     dispatch(setPayloadData(payload));
     createOrdering && dispatch(setCreate(true));
     updateOrdering && dispatch(setUpdate(true));
@@ -705,7 +708,43 @@ const OrderingModal = () => {
                             />
                           )}
                         />
-
+                        <Autocomplete
+                          disabled={viewOrdering}
+                          control={control}
+                          name={`order.${index}.account_title`}
+                          options={
+                            watch(`order.${index}.material`)?.account_title ||
+                            []
+                          }
+                          getOptionLabel={(option) =>
+                            `${option?.account_title.code} - ${option?.account_title?.name}`
+                          }
+                          isOptionEqualToValue={(option, value) =>
+                            option?.id === value?.id
+                          }
+                          renderInput={(params) => (
+                            <MuiTextField
+                              {...params}
+                              sx={{
+                                minWidth: "300px",
+                              }}
+                              size="small"
+                              label="Account Title"
+                              variant="filled"
+                              error={
+                                Boolean(errors.order?.[index]?.account_title) ||
+                                Boolean(
+                                  errors.order?.[index]?.account_title?.code,
+                                )
+                              }
+                              helperText={
+                                errors.order?.[index]?.account_title?.message ||
+                                errors.order?.[index]?.account_title?.code
+                                  ?.message
+                              }
+                            />
+                          )}
+                        />
                         <AppTextBox
                           disabled={
                             approveOrdering || viewOrdering || serveOrdering
@@ -730,6 +769,7 @@ const OrderingModal = () => {
                           error={Boolean(errors.order?.[index]?.quantity)}
                           helperText={errors.order?.[index]?.quantity?.message}
                         />
+
                         <AppTextBox
                           disabled={
                             approveOrdering || viewOrdering || serveOrdering

@@ -1,4 +1,5 @@
 import { serverAPI } from "../request/serverAPI";
+import { setWarehouseData } from "../slice/valuesSlice";
 
 export const warehouseAPI = serverAPI.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,6 +11,13 @@ export const warehouseAPI = serverAPI.injectEndpoints({
         params: payload,
       }),
       providesTags: ["Warehouse"],
+      async onQueryStarted(payload, { dispatch, getState, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (Array.isArray(data)) dispatch(setWarehouseData(data));
+          else dispatch(setWarehouseData(data?.result));
+        } catch (error) {}
+      },
     }),
     createWarehouse: builder.mutation({
       query: (payload) => ({

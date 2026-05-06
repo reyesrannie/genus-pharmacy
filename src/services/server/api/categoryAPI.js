@@ -1,4 +1,5 @@
 import { serverAPI } from "../request/serverAPI";
+import { setCategoryData } from "../slice/valuesSlice";
 
 export const categoryAPI = serverAPI.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,6 +11,13 @@ export const categoryAPI = serverAPI.injectEndpoints({
         params: payload,
       }),
       providesTags: ["Category"],
+      async onQueryStarted(payload, { dispatch, getState, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (Array.isArray(data)) dispatch(setCategoryData(data));
+          else dispatch(setCategoryData(data?.result));
+        } catch (error) {}
+      },
     }),
     createCategory: builder.mutation({
       query: (payload) => ({

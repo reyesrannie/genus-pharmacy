@@ -90,7 +90,10 @@ const Materials = () => {
       name: "Name",
       value: "name",
     },
-
+    {
+      name: "Account Title",
+      type: "multiple",
+    },
     {
       name: "Category",
       value: "category",
@@ -135,7 +138,7 @@ const Materials = () => {
       await archiveMaterial(materialsData).unwrap();
       enqueueSnackbar(
         `Materials has been ${params?.status === "active" ? "archived" : "restored"}`,
-        { variant: "success" }
+        { variant: "success" },
       );
       dispatch(resetModal());
       dispatch(resetPrompt());
@@ -148,7 +151,7 @@ const Materials = () => {
     const mapped = readExcelItemsMaterials(
       importData,
       importHeader,
-      accountTitle?.result
+      accountTitle?.result,
     );
 
     try {

@@ -12,6 +12,9 @@ const materialsSchema = Yup.object({
   warehouse_id: Yup.object()
     .required("This is required")
     .typeError("This is required"),
+  account_title: Yup.array()
+    .required("This is required")
+    .min(1, "This is required"),
 }).required();
 
 export default materialsSchema;

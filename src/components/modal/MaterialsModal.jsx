@@ -36,6 +36,7 @@ import Autocomplete from "../custom/AutoComplete";
 import { useCategoryQuery } from "../../services/server/api/categoryAPI";
 import useParamsHook from "../../services/hooks/useParamsHook";
 import {
+  setAccountTitleData,
   setCategoryData,
   setUomData,
   setWarehouseData,
@@ -62,6 +63,7 @@ const MaterialsModal = () => {
   const { enqueueSnackbar } = useSnackbar();
   const debounceTimeout = useRef(null);
   const running = useRef(null);
+  const { multipleFetch } = FetchDataFn();
 
   const warning = useSelector((state) => state.prompt.warning);
   const materialsModal = useSelector((state) => state.modal.materialsModal);
@@ -70,7 +72,7 @@ const MaterialsModal = () => {
   const uomData = useSelector((state) => state.values.uomData);
   const warehouseData = useSelector((state) => state.values.warehouseData);
   const accountTitleData = useSelector(
-    (state) => state.values.accountTitleData
+    (state) => state.values.accountTitleData,
   );
 
   const {
@@ -105,25 +107,25 @@ const MaterialsModal = () => {
     data: category,
     isLoading: loadingCategory,
     isError: errorCategory,
-  } = useCategoryQuery(paramsCategory);
+  } = useCategoryQuery({ status: "active", pagination: "none" });
 
   const {
     data: uom,
     isLoading: loadingUom,
     isError: errorUom,
-  } = useUomQuery(paramsUom);
+  } = useUomQuery({ status: "active", pagination: "none" });
 
   const {
     data: warehouse,
     isLoading: loadingWareHouse,
     isError: errorWarehouse,
-  } = useWarehouseQuery(paramsWarehouse);
+  } = useWarehouseQuery({ status: "active", pagination: "none" });
 
   const {
     data: accountTitle,
     isLoading: loadingAccountTitle,
     isError: errorAccountTitle,
-  } = useAccountTitleQuery(paramsAccountTitle);
+  } = useAccountTitleQuery({ status: "active", pagination: "none" });
 
   const [getAccountTitle] = useLazyAccountTitleQuery();
   const [createMaterials, { isLoading: loadingCreate }] =
@@ -147,6 +149,7 @@ const MaterialsModal = () => {
       category_id: null,
       uom_id: null,
       warehouse_id: null,
+      account_title: [],
     },
   });
 
@@ -157,7 +160,9 @@ const MaterialsModal = () => {
       category_id: submitData?.category_id?.id,
       uom_id: submitData?.uom_id?.id,
       warehouse_id: submitData?.warehouse_id?.id,
-
+      account_title: submitData?.account_title?.map((item) => ({
+        account_title_id: item?.id,
+      })),
       id: materials !== null ? materials?.id : null,
     };
 
@@ -173,15 +178,21 @@ const MaterialsModal = () => {
       objectError(error, setError, enqueueSnackbar);
     }
   };
-
+  const handleCheckAccountTitle = () => {
+    const matched = materials?.account_title?.every((at) =>
+      accountTitleData?.some((atd) => atd?.code === at?.account_title?.code),
+    );
+    return matched;
+  };
   const handleCheckUom = () => {
     const matched = uomData?.some(
-      (atd) => atd?.description === materials?.uom?.description
+      (atd) => atd?.description === materials?.uom?.description,
     );
     return matched;
   };
 
   const mapMaterialsToForm = () => {
+    running.current = true;
     const mapped = {
       code: materials?.code || "",
       name: materials?.name || "",
@@ -193,8 +204,15 @@ const MaterialsModal = () => {
         warehouseData?.find((item) => item?.id === materials?.warehouse?.id) ||
         null,
     };
-
-    Object.entries(mapped).forEach(([key, value]) => setValue(key, value));
+    account_title: materials?.account_title?.map((item) => {
+      return (
+        accountTitleData?.find(
+          (account) => account?.id === item?.account_title_id,
+        ) || null
+      );
+    }),
+      Object.entries(mapped).forEach(([key, value]) => setValue(key, value));
+    running.current = false;
   };
 
   const getValue = useCallback((e, func) => {
@@ -207,26 +225,13 @@ const MaterialsModal = () => {
   }, []);
 
   useEffect(() => {
-    if (category?.result?.data) {
-      dispatch(setCategoryData(category?.result?.data));
-    }
-    if (uom?.result?.data) {
-      dispatch(setUomData(uom?.result?.data));
-    }
-    if (warehouse?.result?.data) {
-      dispatch(setWarehouseData(warehouse?.result?.data));
-    }
-  }, [category, uom, warehouse]);
-
-  useEffect(() => {
     if (
       materials &&
       materialsModal &&
       accountTitleData &&
       uomData &&
       warehouseData &&
-      categoryData &&
-      handleCheckUom()
+      categoryData
     ) {
       mapMaterialsToForm();
     }
@@ -238,13 +243,6 @@ const MaterialsModal = () => {
     warehouseData,
     categoryData,
   ]);
-
-  useEffect(() => {
-    if (materials !== null) {
-      onSearchUom(materials?.uom?.description);
-      onSearchCategory(materials?.category?.name);
-    }
-  }, [materials]);
 
   return (
     <Dialog
@@ -304,7 +302,7 @@ const MaterialsModal = () => {
                 }
                 scrollChange={(e) =>
                   handleScroll(e, () =>
-                    onSelectPageCategory(paramsCategory?.page + 1)
+                    onSelectPageCategory(paramsCategory?.page + 1),
                   )
                 }
                 onKeyUp={(e) => {
@@ -372,7 +370,7 @@ const MaterialsModal = () => {
                 }
                 scrollChange={(e) =>
                   handleScroll(e, () =>
-                    onSelectPageWarehouse(paramsWarehouse?.page + 1)
+                    onSelectPageWarehouse(paramsWarehouse?.page + 1),
                   )
                 }
                 onKeyUp={(e) => {
@@ -395,6 +393,52 @@ const MaterialsModal = () => {
                     variant="outlined"
                     error={Boolean(errors.warehouse_id)}
                     helperText={errors.warehouse_id?.message}
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                sx={{
+                  "& .MuiInputBase-root": {
+                    minHeight:
+                      watch("account_title")?.length === 0
+                        ? 56
+                        : "var(--input-min-height)",
+                  },
+                }}
+                loading={loadingAccountTitle}
+                control={control}
+                name={"account_title"}
+                options={accountTitleData || []}
+                getOptionLabel={(option) => `${option?.code} - ${option?.name}`}
+                isOptionEqualToValue={(option, value) =>
+                  option?.id === value?.id
+                }
+                scrollChange={(e) =>
+                  handleScroll(e, () =>
+                    onSelectPageAccountTitle(paramsAccountTitle?.page + 1),
+                  )
+                }
+                onKeyUp={(e) => {
+                  if (e?.target?.value === "") {
+                    resetAccountTitle();
+                  } else {
+                    getValue(e, onSearchAccountTitle);
+                  }
+                }}
+                noOptionsText={
+                  errorAccountTitle
+                    ? "No account title found"
+                    : "Searching account title..."
+                }
+                renderInput={(params) => (
+                  <MuiTextField
+                    {...params}
+                    label="Account Title"
+                    size="small"
+                    variant="outlined"
+                    error={Boolean(errors?.account_title)}
+                    helperText={errors?.account_title?.message}
                   />
                 )}
               />

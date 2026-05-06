@@ -1,4 +1,5 @@
 import { serverAPI } from "../request/serverAPI";
+import { setAccountTitleData } from "../slice/valuesSlice";
 
 export const accountTitleAPI = serverAPI.injectEndpoints({
   endpoints: (builder) => ({
@@ -10,6 +11,13 @@ export const accountTitleAPI = serverAPI.injectEndpoints({
         params: payload,
       }),
       providesTags: ["AccountTitle"],
+      async onQueryStarted(payload, { dispatch, getState, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (Array.isArray(data)) dispatch(setAccountTitleData(data));
+          else dispatch(setAccountTitleData(data?.result));
+        } catch (error) {}
+      },
     }),
     createAccountTitle: builder.mutation({
       query: (payload) => ({
