@@ -132,6 +132,8 @@ const OrderTaker = () => {
         { style: "blur", value: "date_orderd", dateTime: true },
         { style: "primary", value: "Date Needed" },
         { style: "blur", value: "date_needed", dateTime: false },
+        { style: "primary", value: "Date Posted" },
+        { style: "blur", value: "date_posted", dateTime: true },
       ],
     },
   ];

@@ -40,6 +40,7 @@ import Approver from "../../screen/approver/Approver";
 import OrderTaker from "../../screen/order_taker/OrderTaker";
 import OrderType from "../../screen/masterlist/orderType/OrderType";
 import Customer from "../../screen/masterlist/customer/Customer";
+import PendingAccounts from "../../screen/user/PendingAccounts";
 
 const SystemNavigation = () => {
   const navigation = [
@@ -74,6 +75,14 @@ const SystemNavigation = () => {
           element: <UserRoles />,
           route: "/account/role",
           permission: ["user"],
+        },
+        {
+          segment: "pending",
+          title: "Pending Accounts",
+          icon: <BadgeOutlinedIcon />,
+          element: <PendingAccounts />,
+          route: "/account/pending",
+          permission: ["pending"],
         },
       ],
     },
