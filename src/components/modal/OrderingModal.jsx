@@ -8,6 +8,11 @@ import {
   IconButton,
   Divider,
   DialogActions,
+  Checkbox,
+  FormControlLabel,
+  Box,
+  Switch,
+  InputAdornment,
 } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -88,6 +93,7 @@ import {
 import { FetchDataFn } from "../../services/functions/FetchDataFn";
 import { useCustomerQuery } from "../../services/server/api/customerAPI";
 import { useOrderTypeQuery } from "../../services/server/api/orderTypeAPI";
+import { CheckBox } from "@mui/icons-material";
 
 const OrderingModal = () => {
   const dispatch = useDispatch();
@@ -396,6 +402,7 @@ const OrderingModal = () => {
               <CloseIcon sx={{ fontSize: "20px" }} />
             </IconButton>
           </Stack>
+
           <Stack
             gap={2}
             sx={{
@@ -528,6 +535,7 @@ const OrderingModal = () => {
                 render={({ field }) => (
                   <MobileDatePicker
                     disabled={approveOrdering || viewOrdering || serveOrdering}
+                    disableHighlightToday
                     open={openPicker}
                     onOpen={() => setOpenPicker(true)}
                     onClose={() => setOpenPicker(false)}
@@ -547,14 +555,59 @@ const OrderingModal = () => {
                             fontSize: "12px",
                             paddingTop: "3px",
                             paddingBottom: "3px",
-
                             borderRadius: "6px",
                           },
+                          endAdornment: (
+                            <InputAdornment position="end">
+                              <FormControlLabel
+                                disabled={
+                                  approveOrdering ||
+                                  viewOrdering ||
+                                  serveOrdering
+                                }
+                                control={
+                                  <Switch
+                                    size="small"
+                                    color="error"
+                                    checked={!!watch("rush")}
+                                    onChange={(e) => {
+                                      e.stopPropagation();
+                                      setValue("rush", e.target.checked, {
+                                        shouldValidate: true,
+                                        shouldDirty: true,
+                                      });
+                                    }}
+                                  />
+                                }
+                                label={
+                                  <Typography
+                                    fontSize="12px"
+                                    fontWeight={
+                                      watch("rush") ? "bold" : "normal"
+                                    }
+                                    color={
+                                      watch("rush")
+                                        ? "error.main"
+                                        : "text.secondary"
+                                    }
+                                  >
+                                    RUSH
+                                  </Typography>
+                                }
+                                sx={{ margin: 0, paddingRight: 1 }}
+                              />
+                            </InputAdornment>
+                          ),
                         },
-                        onClick: () =>
-                          !approveOrdering &&
-                          !viewOrdering &&
-                          setOpenPicker(true),
+
+                        onClick: (e) => {
+                          // If they click the switch, don't open the calendar
+                          if (e.target.closest(".MuiSwitch-root")) return;
+
+                          if (!approveOrdering && !viewOrdering) {
+                            setOpenPicker(true);
+                          }
+                        },
                         error: Boolean(errors?.date_needed),
                         helperText: errors?.date_needed?.message,
                       },
@@ -625,7 +678,38 @@ const OrderingModal = () => {
                   />
                 )}
               />
+              {/* <Controller
+                name="rush"
+                control={control}
+                render={({ field }) => (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      height: "40px", // Matches the rough height of size="small" MUI inputs
+                      paddingLeft: 1,
+                    }}
+                  >
+                    <FormControlLabel
+                      disabled={
+                        approveOrdering || viewOrdering || serveOrdering
+                      }
+                      control={
+                        <Switch
+                          {...field}
+                          checked={!!field.value}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          color="error" // Turns red when toggled on
+                        />
+                      }
+                      label="Rush Order"
+                      sx={{ margin: 0 }}
+                    />
+                  </Box>
+                )}
+              /> */}
             </Stack>
+
             <Stack
               sx={{
                 overflowY: "hidden",
