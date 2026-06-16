@@ -85,7 +85,11 @@ import {
   resetPrompt,
   setWarning,
 } from "../../services/server/slice/promptSlice";
-import { cutOffGet } from "../../services/functions/dateChecker";
+import {
+  canOrder,
+  canUpdate,
+  cutOffGet,
+} from "../../services/functions/dateChecker";
 import {
   useAssetsQuery,
   useLazyAssetsQuery,
@@ -212,7 +216,6 @@ const OrderingModal = () => {
       id: ordering !== null ? ordering?.id : null,
     };
 
-    console.log(payload);
     dispatch(setPayloadData(payload));
     createOrdering && dispatch(setCreate(true));
     updateOrdering && dispatch(setUpdate(true));
@@ -538,7 +541,11 @@ const OrderingModal = () => {
                     disableHighlightToday
                     open={openPicker}
                     onOpen={() => setOpenPicker(true)}
-                    onClose={() => setOpenPicker(false)}
+                    onClose={() => {
+                      !canOrder(new Date(watch("date_needed"))) &&
+                        setValue("reason", "");
+                      setOpenPicker(false);
+                    }}
                     minDate={cutOffGet()}
                     maxDate={dayjs().add(1, "year")}
                     label="Date Needed"
@@ -569,13 +576,12 @@ const OrderingModal = () => {
                                   <Switch
                                     size="small"
                                     color="error"
-                                    checked={!!watch("rush")}
+                                    checked={
+                                      watch("date_needed") !== null &&
+                                      !canOrder(new Date(watch("date_needed")))
+                                    }
                                     onChange={(e) => {
                                       e.stopPropagation();
-                                      setValue("rush", e.target.checked, {
-                                        shouldValidate: true,
-                                        shouldDirty: true,
-                                      });
                                     }}
                                   />
                                 }
@@ -586,7 +592,12 @@ const OrderingModal = () => {
                                       watch("rush") ? "bold" : "normal"
                                     }
                                     color={
-                                      watch("rush")
+                                      (watch("date_needed") !== null &&
+                                        !canOrder(
+                                          new Date(watch("date_needed")),
+                                        )) ||
+                                      (watch("reason") !== "" &&
+                                        watch("reason") !== null)
                                         ? "error.main"
                                         : "text.secondary"
                                     }
@@ -601,9 +612,7 @@ const OrderingModal = () => {
                         },
 
                         onClick: (e) => {
-                          // If they click the switch, don't open the calendar
                           if (e.target.closest(".MuiSwitch-root")) return;
-
                           if (!approveOrdering && !viewOrdering) {
                             setOpenPicker(true);
                           }
@@ -678,37 +687,28 @@ const OrderingModal = () => {
                   />
                 )}
               />
-              {/* <Controller
-                name="rush"
-                control={control}
-                render={({ field }) => (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      height: "40px", // Matches the rough height of size="small" MUI inputs
-                      paddingLeft: 1,
-                    }}
-                  >
-                    <FormControlLabel
-                      disabled={
-                        approveOrdering || viewOrdering || serveOrdering
-                      }
-                      control={
-                        <Switch
-                          {...field}
-                          checked={!!field.value}
-                          onChange={(e) => field.onChange(e.target.checked)}
-                          color="error" // Turns red when toggled on
-                        />
-                      }
-                      label="Rush Order"
-                      sx={{ margin: 0 }}
-                    />
-                  </Box>
-                )}
-              /> */}
             </Stack>
+            {watch("date_needed") !== null &&
+              !canOrder(new Date(watch("date_needed"))) && (
+                <Stack
+                  gap={2}
+                  columnGap={2}
+                  sx={{
+                    borderRadius: 2,
+                  }}
+                >
+                  <AppTextBox
+                    disabled={approveOrdering || viewOrdering || serveOrdering}
+                    multiline
+                    control={control}
+                    name="reason"
+                    label="Rush Reason"
+                    error={Boolean(errors?.reason)}
+                    helperText={errors?.reason?.message}
+                    maxRows={2}
+                  />
+                </Stack>
+              )}
 
             <Stack
               sx={{
@@ -768,6 +768,9 @@ const OrderingModal = () => {
                             } else {
                               getValue(e, searchMaterials);
                             }
+                          }}
+                          onClose={() => {
+                            setValue(`order.${index}.account_title`, null);
                           }}
                           noOptionsText={
                             errorMaterials
@@ -941,11 +944,22 @@ const OrderingModal = () => {
                   type="submit"
                   disabled={
                     fields.length === 0 ||
+                    (watch("order") || []).some(
+                      (item) =>
+                        !item?.material ||
+                        item?.quantity === null ||
+                        item?.quantity === "" ||
+                        item?.account_title === null ||
+                        item?.account_title?.id === undefined,
+                    ) ||
                     watch("order_no") === "" ||
                     watch("date_needed") === null ||
                     watch("type") === null ||
                     watch("customer") === null ||
-                    watch("batch_no") === ""
+                    watch("batch_no") === "" ||
+                    (!canOrder(new Date(watch("date_needed"))) &&
+                      watch("reason") === "") ||
+                    !canUpdate(new Date(watch("date_needed")))
                   }
                   startIcon={<ShoppingCartCheckoutOutlinedIcon />}
                   size="small"
@@ -955,22 +969,6 @@ const OrderingModal = () => {
                 >
                   Check out
                 </Button>
-                {/* {updateOrdering && (
-                  <Button
-                    variant="contained"
-                    color="error"
-                    startIcon={<DeleteForeverOutlinedIcon />}
-                    size="small"
-                    sx={{
-                      textTransform: "uppercase",
-                    }}
-                    onClick={() => {
-                      handleReject();
-                    }}
-                  >
-                    Archive
-                  </Button>
-                )} */}
               </Stack>
             )}
 

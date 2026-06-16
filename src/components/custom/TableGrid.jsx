@@ -15,6 +15,7 @@ import dayjs from "dayjs";
 // import "../styles/TableGrid.scss";
 
 import InsertLinkOutlinedIcon from "@mui/icons-material/InsertLinkOutlined";
+import BoltIcon from "@mui/icons-material/Bolt";
 
 const TableGrid = ({
   header = [],
@@ -39,6 +40,8 @@ const TableGrid = ({
         </TableHead>
         <TableBody>
           {items?.data?.map((i, ind) => {
+            console.log(i);
+
             return (
               <TableRow
                 key={ind}
@@ -180,7 +183,37 @@ const TableGrid = ({
                       {head?.type === "pharma" && (
                         <Stack minWidth={"120px"}>
                           {head?.child?.map((ch, ind) => {
-                            return (
+                            return ch?.style === "mir" ? (
+                              <Stack
+                                flexDirection={"row"}
+                                alignItems={"center"}
+                              >
+                                {i?.reason && <BoltIcon color="warning" />}
+                                <Typography
+                                  key={ind}
+                                  sx={{
+                                    fontSize:
+                                      {
+                                        "MIR ID.": "12px",
+                                      }[ch?.title] || "10px",
+                                    fontWeight:
+                                      {
+                                        "Order No.": 400,
+                                        "Batch No.": 400,
+                                      }[ch?.title] || 600,
+                                    color:
+                                      {
+                                        primary: "#000000",
+                                        secondary: "#000000",
+                                        success: "#065F46",
+                                        blur: "#828282",
+                                      }[ch?.style] || "#000000",
+                                  }}
+                                >
+                                  {`${ch?.title ? ch?.title : ""} ${ch?.parent ? i[ch?.parent][ch?.value] : i[ch?.value] ? i[ch?.value] : ch.value}`}
+                                </Typography>
+                              </Stack>
+                            ) : (
                               <Typography
                                 key={ind}
                                 sx={{

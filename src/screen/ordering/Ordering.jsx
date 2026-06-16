@@ -67,7 +67,7 @@ const Ordering = () => {
       type: "pharma",
       name: "Mir",
       child: [
-        { style: "primary", title: "MIR ID.", value: "id" },
+        { style: "mir", title: "MIR ID.", value: "id" },
         { style: "secondary", title: "Order No.", value: "order_no" },
         { style: "secondary", title: "Batch No.", value: "batch_no" },
         { style: "success", parent: "type", value: "name" },

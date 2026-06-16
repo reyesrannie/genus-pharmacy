@@ -13,7 +13,7 @@ const validateDecimalNumber = (value) => {
 const orderingSchema = Yup.object({
   order_no: Yup.string().required("This is required"),
   batch_no: Yup.string().required("This is required"),
-
+  reason: Yup.string().nullable(),
   date_needed: Yup.object()
     .required("This is required")
     .typeError("This is required"),
@@ -41,7 +41,7 @@ const orderingSchema = Yup.object({
           .test("Invalid", (value) => value !== 0)
           .label("Quantity"),
         remarks: Yup.string().nullable(),
-      })
+      }),
     )
     .compact((value) => value.material === null && value.quantity === "")
     .min(1)
