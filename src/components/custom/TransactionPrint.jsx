@@ -16,6 +16,7 @@ import logoRdf from "../../assets/logoRdf.png";
 
 import LocalPrintshopOutlinedIcon from "@mui/icons-material/LocalPrintshopOutlined";
 import CloseIcon from "@mui/icons-material/Close";
+import BoltIcon from "@mui/icons-material/Bolt";
 
 import TableGrid from "./TableGrid";
 import dayjs from "dayjs";
@@ -205,6 +206,25 @@ const TransactionPrint = () => {
               </Typography>
             </Stack>
 
+            {ordering?.reason !== null && (
+              <Stack flexDirection={"row"} gap={0.5} alignItems={"center"}>
+                <Typography fontSize={"12px"} fontWeight={700}>
+                  Rush Reason:
+                </Typography>
+                {/* <BoltIcon color="warning" /> */}
+
+                <Typography
+                  fontSize={"12px"}
+                  sx={{
+                    textTransform: "capitalize",
+                  }}
+                  color="error"
+                >
+                  {ordering?.reason?.toLowerCase()}
+                </Typography>
+              </Stack>
+            )}
+
             <Stack flexDirection={"row"} gap={0.5} alignItems={"center"}>
               <Typography fontSize={"12px"} fontWeight={700}>
                 Type:
@@ -349,7 +369,10 @@ const TransactionPrint = () => {
               variant="contained"
               onClick={() => handleServe()}
               loading={isLoading}
-              disabled={ordering?.status?.toLowerCase() === "consolidated" || ordering?.status?.toLowerCase() === "pending"}
+              disabled={
+                ordering?.status?.toLowerCase() === "consolidated" ||
+                ordering?.status?.toLowerCase() === "pending"
+              }
             >
               Serve
             </Button>

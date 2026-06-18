@@ -10,6 +10,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { resetModal } from "../../services/server/slice/modalSlice";
 import { decodeUser } from "../../services/functions/saveUser";
 import { Add } from "@mui/icons-material";
+import {
+  canOrder,
+  isCutOff,
+  isRush,
+} from "../../services/functions/dateChecker";
 
 const MenuPopper = ({
   params,
@@ -24,6 +29,7 @@ const MenuPopper = ({
   const dispatch = useDispatch();
   const loggedInUser = decodeUser();
   const userData = useSelector((state) => state.modal.userData);
+  const ordering = useSelector((state) => state.modal.ordering);
 
   return (
     <Menu
@@ -49,7 +55,14 @@ const MenuPopper = ({
 
       {posting &&
         (params?.status === "active" || params?.status === "pending") && (
-          <MenuItem onClick={posting}>
+          <MenuItem
+            onClick={posting}
+            disabled={
+              canOrder(ordering?.date_needed) ||
+              (isRush(ordering?.date_needed) &&
+                (ordering?.reason === "" || ordering?.reason === null))
+            }
+          >
             <ListItemIcon>
               <ApprovalOutlinedIcon fontSize="small" />
             </ListItemIcon>

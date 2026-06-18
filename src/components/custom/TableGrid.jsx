@@ -40,8 +40,6 @@ const TableGrid = ({
         </TableHead>
         <TableBody>
           {items?.data?.map((i, ind) => {
-            console.log(i);
-
             return (
               <TableRow
                 key={ind}

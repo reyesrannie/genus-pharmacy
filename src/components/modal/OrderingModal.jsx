@@ -87,8 +87,9 @@ import {
 } from "../../services/server/slice/promptSlice";
 import {
   canOrder,
-  canUpdate,
   cutOffGet,
+  isCutOff,
+  isRush,
 } from "../../services/functions/dateChecker";
 import {
   useAssetsQuery,
@@ -542,8 +543,7 @@ const OrderingModal = () => {
                     open={openPicker}
                     onOpen={() => setOpenPicker(true)}
                     onClose={() => {
-                      !canOrder(new Date(watch("date_needed"))) &&
-                        setValue("reason", "");
+                      isCutOff(watch("date_needed")) && setValue("reason", "");
                       setOpenPicker(false);
                     }}
                     minDate={cutOffGet()}
@@ -576,10 +576,7 @@ const OrderingModal = () => {
                                   <Switch
                                     size="small"
                                     color="error"
-                                    checked={
-                                      watch("date_needed") !== null &&
-                                      !canOrder(new Date(watch("date_needed")))
-                                    }
+                                    checked={isRush(watch("date_needed"))}
                                     onChange={(e) => {
                                       e.stopPropagation();
                                     }}
@@ -592,12 +589,7 @@ const OrderingModal = () => {
                                       watch("rush") ? "bold" : "normal"
                                     }
                                     color={
-                                      (watch("date_needed") !== null &&
-                                        !canOrder(
-                                          new Date(watch("date_needed")),
-                                        )) ||
-                                      (watch("reason") !== "" &&
-                                        watch("reason") !== null)
+                                      isCutOff(watch("date_needed"))
                                         ? "error.main"
                                         : "text.secondary"
                                     }
@@ -688,27 +680,26 @@ const OrderingModal = () => {
                 )}
               />
             </Stack>
-            {watch("date_needed") !== null &&
-              !canOrder(new Date(watch("date_needed"))) && (
-                <Stack
-                  gap={2}
-                  columnGap={2}
-                  sx={{
-                    borderRadius: 2,
-                  }}
-                >
-                  <AppTextBox
-                    disabled={approveOrdering || viewOrdering || serveOrdering}
-                    multiline
-                    control={control}
-                    name="reason"
-                    label="Rush Reason"
-                    error={Boolean(errors?.reason)}
-                    helperText={errors?.reason?.message}
-                    maxRows={2}
-                  />
-                </Stack>
-              )}
+            {isRush(watch("date_needed")) && (
+              <Stack
+                gap={2}
+                columnGap={2}
+                sx={{
+                  borderRadius: 2,
+                }}
+              >
+                <AppTextBox
+                  disabled={approveOrdering || viewOrdering || serveOrdering}
+                  multiline
+                  control={control}
+                  name="reason"
+                  label="Rush Reason"
+                  error={Boolean(errors?.reason)}
+                  helperText={errors?.reason?.message}
+                  maxRows={2}
+                />
+              </Stack>
+            )}
 
             <Stack
               sx={{
@@ -957,9 +948,9 @@ const OrderingModal = () => {
                     watch("type") === null ||
                     watch("customer") === null ||
                     watch("batch_no") === "" ||
-                    (!canOrder(new Date(watch("date_needed"))) &&
-                      watch("reason") === "") ||
-                    !canUpdate(new Date(watch("date_needed")))
+                    canOrder(watch("date_needed")) ||
+                    (isRush(watch("date_needed")) &&
+                      (watch("reason") === "" || watch("reason") === undefined))
                   }
                   startIcon={<ShoppingCartCheckoutOutlinedIcon />}
                   size="small"

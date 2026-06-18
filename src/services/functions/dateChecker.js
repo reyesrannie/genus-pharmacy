@@ -1,12 +1,13 @@
 import React from "react";
 import { decodeUser } from "./saveUser";
 import dayjs from "dayjs";
+import { date } from "yup";
+
+const userData = decodeUser();
+const cutoff = userData?.cut_off[0]?.time || "12:00:00";
+const now = new Date();
 
 export const cutOffGet = () => {
-  const userData = decodeUser();
-  const cutoff = userData?.cut_off[0]?.time || "12:00:00";
-  const now = new Date();
-
   const [hours, minutes, seconds] = cutoff.split(":").map(Number);
   const cutoffTime = new Date(
     now?.getFullYear(),
@@ -23,63 +24,48 @@ export const cutOffGet = () => {
   return minData;
 };
 
-export const canOrder = (dateNeeded = new Date()) => {
-  const userData = decodeUser();
-  const cutoff = userData?.cut_off?.[0]?.time || "12:00:00";
-  const now = new Date();
+export const isCutOff = (dateNeeded) => {
+  if (!dateNeeded) return false;
+  const neededDate = new Date(dateNeeded);
 
-  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const neededDate = new Date(
-    dateNeeded?.getFullYear(),
-    dateNeeded?.getMonth(),
-    dateNeeded?.getDate(),
-  );
-
-  if (neededDate < todayDate) return false;
-
-  if (neededDate > todayDate) return true;
-
-  console.log("either the two");
   const [hours, minutes, seconds] = cutoff.split(":").map(Number);
-  const cutoffTime = new Date(
-    now?.getFullYear(),
-    now?.getMonth(),
-    now?.getDate(),
+
+  const targetCutoff = new Date(
+    neededDate?.getFullYear(),
+    neededDate?.getMonth(),
+    neededDate?.getDate(),
     hours,
     minutes,
-    seconds || 0,
+    seconds,
   );
 
-  return now <= cutoffTime;
+  return targetCutoff <= now;
 };
 
-export const canUpdate = (dateNeeded = new Date()) => {
-  const userData = decodeUser();
-  const cutoff = userData?.cut_off?.[0]?.time || "12:00:00";
-  const now = new Date();
+export const isRush = (dateNeeded) => {
+  if (!dateNeeded) return false;
+  const neededDate = new Date(dateNeeded);
 
-  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const neededDate = new Date(
-    dateNeeded?.getFullYear(),
-    dateNeeded?.getMonth(),
-    dateNeeded?.getDate(),
-  );
+  if (neededDate < now) return true;
+  if (neededDate > now) return false;
+  if (isCutOff(neededDate)) return true;
+  return false;
+};
 
-  if (neededDate < todayDate) return false;
+export const canOrder = (dateNeeded) => {
+  if (!dateNeeded) return false;
 
-  if (neededDate > todayDate) return true;
+  const neededDate = new Date(dateNeeded);
+  const today = new Date();
 
-  const [hours, minutes, seconds] = cutoff.split(":").map(Number);
-  const cutoffTime = new Date(
-    now?.getFullYear(),
-    now?.getMonth(),
-    now?.getDate(),
-    hours,
-    minutes,
-    seconds || 0,
-  );
+  neededDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
 
-  const checkIfCanOrder = now <= cutoffTime;
+  const rush = isRush(neededDate);
+  const cutoffReached = isCutOff(neededDate);
 
-  return checkIfCanOrder;
+  if (neededDate < today) return true;
+  if (neededDate > today) return false;
+  if (rush && cutoffReached) return true;
+  return false;
 };
