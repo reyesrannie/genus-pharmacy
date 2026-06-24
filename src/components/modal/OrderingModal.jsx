@@ -86,10 +86,9 @@ import {
   setWarning,
 } from "../../services/server/slice/promptSlice";
 import {
-  canOrder,
-  cutOffGet,
-  isCutOff,
-  isRush,
+  getMinDeliveryDate,
+  isRushDate,
+  isValidOrderDate,
 } from "../../services/functions/dateChecker";
 import {
   useAssetsQuery,
@@ -334,6 +333,8 @@ const OrderingModal = () => {
         setChargingData,
         running,
       );
+    } else {
+      reset();
     }
   }, [ordering]);
 
@@ -364,7 +365,6 @@ const OrderingModal = () => {
   useEffect(() => {
     if (customers?.length === 1 && !hasRun && createOrdering) {
       setValue("customer", customers[0]);
-
       getCharging({
         status: "active",
         search: customers[0]?.charging_code,
@@ -536,85 +536,92 @@ const OrderingModal = () => {
                 disabled={approveOrdering || viewOrdering || serveOrdering}
                 control={control}
                 name="date_needed"
-                render={({ field }) => (
-                  <MobileDatePicker
-                    disabled={approveOrdering || viewOrdering || serveOrdering}
-                    disableHighlightToday
-                    open={openPicker}
-                    onOpen={() => setOpenPicker(true)}
-                    onClose={() => {
-                      isCutOff(watch("date_needed")) && setValue("reason", "");
-                      setOpenPicker(false);
-                    }}
-                    minDate={cutOffGet()}
-                    maxDate={dayjs().add(1, "year")}
-                    label="Date Needed"
-                    value={field.value}
-                    onChange={(newValue) => {
-                      field.onChange(newValue);
-                    }}
-                    closeOnSelect
-                    slotProps={{
-                      textField: {
-                        size: "small",
-                        InputProps: {
-                          style: {
-                            fontSize: "12px",
-                            paddingTop: "3px",
-                            paddingBottom: "3px",
-                            borderRadius: "6px",
-                          },
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <FormControlLabel
-                                disabled={
-                                  approveOrdering ||
-                                  viewOrdering ||
-                                  serveOrdering
-                                }
-                                control={
-                                  <Switch
-                                    size="small"
-                                    color="error"
-                                    checked={isRush(watch("date_needed"))}
-                                    onChange={(e) => {
-                                      e.stopPropagation();
-                                    }}
-                                  />
-                                }
-                                label={
-                                  <Typography
-                                    fontSize="12px"
-                                    fontWeight={
-                                      watch("rush") ? "bold" : "normal"
-                                    }
-                                    color={
-                                      isCutOff(watch("date_needed"))
-                                        ? "error.main"
-                                        : "text.secondary"
-                                    }
-                                  >
-                                    RUSH
-                                  </Typography>
-                                }
-                                sx={{ margin: 0, paddingRight: 1 }}
-                              />
-                            </InputAdornment>
-                          ),
-                        },
+                render={({ field }) => {
+                  const isCurrentlyRush = isRushDate(field.value);
+                  const absoluteMinDate = getMinDeliveryDate(true);
 
-                        onClick: (e) => {
-                          if (e.target.closest(".MuiSwitch-root")) return;
-                          if (!approveOrdering && !viewOrdering) {
-                            setOpenPicker(true);
-                          }
+                  return (
+                    <MobileDatePicker
+                      disabled={
+                        approveOrdering || viewOrdering || serveOrdering
+                      }
+                      disableHighlightToday
+                      open={openPicker}
+                      onOpen={() => setOpenPicker(true)}
+                      onClose={() => {
+                        setValue("reason", "");
+                        setOpenPicker(false);
+                      }}
+                      minDate={absoluteMinDate}
+                      maxDate={dayjs().add(1, "year")}
+                      label="Date Needed"
+                      value={field.value}
+                      onChange={(newValue) => {
+                        field.onChange(newValue);
+                      }}
+                      closeOnSelect
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          InputProps: {
+                            style: {
+                              fontSize: "12px",
+                              paddingTop: "3px",
+                              paddingBottom: "3px",
+                              borderRadius: "6px",
+                            },
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <FormControlLabel
+                                  disabled={
+                                    approveOrdering ||
+                                    viewOrdering ||
+                                    serveOrdering
+                                  }
+                                  control={
+                                    <Switch
+                                      size="small"
+                                      color="error"
+                                      checked={isCurrentlyRush}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                      }}
+                                    />
+                                  }
+                                  label={
+                                    <Typography
+                                      fontSize="12px"
+                                      fontWeight={
+                                        watch("rush") ? "bold" : "normal"
+                                      }
+                                      color={
+                                        isCurrentlyRush
+                                          ? "error.main"
+                                          : "text.secondary"
+                                      }
+                                    >
+                                      RUSH
+                                    </Typography>
+                                  }
+                                  sx={{ margin: 0, paddingRight: 1 }}
+                                />
+                              </InputAdornment>
+                            ),
+                          },
+
+                          onClick: (e) => {
+                            if (e.target.closest(".MuiSwitch-root")) return;
+                            if (!approveOrdering && !viewOrdering) {
+                              setOpenPicker(true);
+                            }
+                          },
+                          error: Boolean(errors?.date_needed),
+                          helperText: errors?.date_needed?.message,
                         },
-                        error: Boolean(errors?.date_needed),
-                        helperText: errors?.date_needed?.message,
-                      },
-                    }}
-                  />
-                )}
+                      }}
+                    />
+                  );
+                }}
               />
 
               {showPicker && (
@@ -680,7 +687,7 @@ const OrderingModal = () => {
                 )}
               />
             </Stack>
-            {isRush(watch("date_needed")) && (
+            {isRushDate(watch("date_needed")) && (
               <Stack
                 gap={2}
                 columnGap={2}
@@ -948,9 +955,12 @@ const OrderingModal = () => {
                     watch("type") === null ||
                     watch("customer") === null ||
                     watch("batch_no") === "" ||
-                    canOrder(watch("date_needed")) ||
-                    (isRush(watch("date_needed")) &&
-                      (watch("reason") === "" || watch("reason") === undefined))
+                    !isValidOrderDate(
+                      watch("date_needed"),
+                      isRushDate(watch("date_needed")),
+                    ) ||
+                    (isRushDate(watch("date_needed")) &&
+                      (watch("reason") === "" || watch("reason") === null))
                   }
                   startIcon={<ShoppingCartCheckoutOutlinedIcon />}
                   size="small"

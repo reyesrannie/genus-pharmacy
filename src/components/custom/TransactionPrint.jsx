@@ -64,6 +64,7 @@ const TransactionPrint = () => {
       ],
     },
     { name: "Qty.", value: "quantity" },
+    { name: "Qty Served.", value: "quantity_serve" },
 
     { name: "Remarks", value: "remarks" },
   ];

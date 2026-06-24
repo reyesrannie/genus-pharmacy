@@ -3,69 +3,52 @@ import { decodeUser } from "./saveUser";
 import dayjs from "dayjs";
 import { date } from "yup";
 
-const userData = decodeUser();
-const cutoff = userData?.cut_off[0]?.time || "12:00:00";
-const now = new Date();
-
-export const cutOffGet = () => {
-  const [hours, minutes, seconds] = cutoff.split(":").map(Number);
-  const cutoffTime = new Date(
-    now?.getFullYear(),
-    now?.getMonth(),
-    now?.getDate(),
-    hours,
-    minutes,
-    seconds || 0,
-  );
-
-  const minData =
-    now <= cutoffTime ? dayjs(new Date()) : dayjs(new Date()).add(1, "day");
-
-  return minData;
-};
-
-export const isCutOff = (dateNeeded) => {
-  if (!dateNeeded) return false;
-  const neededDate = new Date(dateNeeded);
+export const isCutOffReached = () => {
+  const userData = decodeUser();
+  const cutoff = userData?.cut_off[0]?.time || "12:00:00";
+  const now = dayjs();
 
   const [hours, minutes, seconds] = cutoff.split(":").map(Number);
 
-  const targetCutoff = new Date(
-    neededDate?.getFullYear(),
-    neededDate?.getMonth(),
-    neededDate?.getDate(),
-    hours,
-    minutes,
-    seconds,
-  );
+  const cutoffTime = dayjs()
+    .hour(hours)
+    .minute(minutes)
+    .second(seconds || 0);
 
-  return targetCutoff <= now;
+  return now.isAfter(cutoffTime);
 };
 
-export const isRush = (dateNeeded) => {
-  if (!dateNeeded) return false;
-  const neededDate = new Date(dateNeeded);
+export const getMinDeliveryDate = (isRushOrder = false) => {
+  const pastCutoff = isCutOffReached();
+  const today = dayjs().startOf("day");
 
-  if (neededDate < now) return true;
-  if (neededDate > now) return false;
-  if (isCutOff(neededDate)) return true;
+  if (isRushOrder) return pastCutoff ? today.add(1, "day") : today;
+  else return pastCutoff ? today.add(2, "day") : today.add(1, "day");
+};
+
+export const isRushDate = (dateNeeded) => {
+  if (!dateNeeded) return false;
+
+  const needed = dayjs(dateNeeded).startOf("day");
+  const today = dayjs().startOf("day");
+  const pastCutoff = isCutOffReached();
+
+  if (needed.isSame(today)) {
+    return true;
+  }
+
+  if (needed.isSame(today.add(1, "day")) && pastCutoff) {
+    return true;
+  }
+
   return false;
 };
 
-export const canOrder = (dateNeeded) => {
+export const isValidOrderDate = (dateNeeded, isRushOrder = false) => {
   if (!dateNeeded) return false;
 
-  const neededDate = new Date(dateNeeded);
-  const today = new Date();
+  const needed = dayjs(dateNeeded).startOf("day");
+  const minAllowedDate = getMinDeliveryDate(isRushOrder);
 
-  neededDate.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-
-  const rush = isRush(neededDate);
-  const cutoffReached = isCutOff(neededDate);
-
-  if (neededDate < today) return true;
-  if (neededDate > today) return false;
-  if (rush && cutoffReached) return true;
-  return false;
+  return needed.valueOf() >= minAllowedDate.valueOf();
 };

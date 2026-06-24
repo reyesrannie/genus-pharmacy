@@ -11,9 +11,8 @@ import { resetModal } from "../../services/server/slice/modalSlice";
 import { decodeUser } from "../../services/functions/saveUser";
 import { Add } from "@mui/icons-material";
 import {
-  canOrder,
-  isCutOff,
-  isRush,
+  isRushDate,
+  isValidOrderDate,
 } from "../../services/functions/dateChecker";
 
 const MenuPopper = ({
@@ -58,8 +57,11 @@ const MenuPopper = ({
           <MenuItem
             onClick={posting}
             disabled={
-              canOrder(ordering?.date_needed) ||
-              (isRush(ordering?.date_needed) &&
+              !isValidOrderDate(
+                ordering?.date_needed,
+                isRushDate(ordering?.date_needed),
+              ) ||
+              (isRushDate(ordering?.date_needed) &&
                 (ordering?.reason === "" || ordering?.reason === null))
             }
           >
