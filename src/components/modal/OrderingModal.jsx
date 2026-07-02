@@ -87,6 +87,7 @@ import {
 } from "../../services/server/slice/promptSlice";
 import {
   getMinDeliveryDate,
+  isCutOffReached,
   isRushDate,
   isValidOrderDate,
 } from "../../services/functions/dateChecker";
@@ -540,6 +541,14 @@ const OrderingModal = () => {
                   const isCurrentlyRush = isRushDate(field.value);
                   const absoluteMinDate = getMinDeliveryDate(true);
 
+                  const handleDisableDate = (date) => {
+                    if (isCutOffReached()) {
+                      const tomorrow = dayjs().add(1, "day");
+                      return dayjs(date).isSame(tomorrow, "day");
+                    }
+                    return false;
+                  };
+
                   return (
                     <MobileDatePicker
                       disabled={
@@ -552,7 +561,8 @@ const OrderingModal = () => {
                         setValue("reason", "");
                         setOpenPicker(false);
                       }}
-                      minDate={absoluteMinDate}
+                      shouldDisableDate={handleDisableDate}
+                      minDate={dayjs()}
                       maxDate={dayjs().add(1, "year")}
                       label="Date Needed"
                       value={field.value}

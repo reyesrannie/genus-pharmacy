@@ -22,8 +22,7 @@ export const getMinDeliveryDate = (isRushOrder = false) => {
   const pastCutoff = isCutOffReached();
   const today = dayjs().startOf("day");
 
-  if (isRushOrder) return pastCutoff ? today.add(1, "day") : today;
-  else return pastCutoff ? today.add(2, "day") : today.add(1, "day");
+  return today;
 };
 
 export const isRushDate = (dateNeeded) => {

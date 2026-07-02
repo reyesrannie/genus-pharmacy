@@ -20,7 +20,7 @@ const Redirect = () => {
       loginUser(data?.result);
       navigate("/");
     } catch (e) {
-      window.location.href = `https://one.rdfmis.com/`;
+      window.location.href = `https://pretest-one.rdfmis.com/`;
     }
   }, [rawData]);
 

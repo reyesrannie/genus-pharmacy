@@ -10,6 +10,7 @@ import {
   Typography,
   TextField as MuiTextField,
   IconButton,
+  useMediaQuery,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -58,6 +59,7 @@ import {
 const UserModal = () => {
   const dispatch = useDispatch();
   const debounceTimeout = useRef(null);
+  const isLaptop = useMediaQuery("(min-width:1024px)");
 
   const running = useRef(false);
   const { multipleFetch } = FetchDataFn();
@@ -106,7 +108,6 @@ const UserModal = () => {
     setError,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(userSchema),
     defaultValues: {
       account_name: "",
       mobile_no: "",
@@ -117,7 +118,6 @@ const UserModal = () => {
       scope_order: [],
     },
   });
-
   const submitHandler = async (submitData) => {
     const payload = {
       ...mapPayloadUser(submitData),
@@ -171,9 +171,12 @@ const UserModal = () => {
     if (hasRun) return;
     const mapUser = {
       account_code: sedarData?.data?.find(
-        (item) => item?.general_info?.full_id_number === userData?.fullIdNo,
+        (item) =>
+          item?.general_info?.full_id_number ===
+          `${userData?.id_prefix}-${userData?.id_no}`,
       ),
-      account_name: userData?.fullname,
+
+      account_name: `${userData?.first_name} ${userData?.last_name}`,
       username: userData?.username,
     };
     Object.entries(mapUser).forEach(([key, value]) => {
@@ -196,12 +199,6 @@ const UserModal = () => {
         (charging) => charging?.code === charge?.charging_code,
       ),
     );
-
-    return matched;
-  };
-
-  const handleCheckRole = () => {
-    const matched = rolesData?.some((role) => role?.id === userData?.role_id);
 
     return matched;
   };
@@ -266,7 +263,7 @@ const UserModal = () => {
 
   useEffect(() => {
     if (userData !== null) {
-      if (userData?.customer?.length > 1) {
+      if (userData?.customer?.length > 0) {
         running.current = true;
         chargingNoPagination();
         running.current = false;
@@ -289,14 +286,7 @@ const UserModal = () => {
   useEffect(() => {
     if (userData?.status === "Pending" && sedarData) {
       mapAddPendingForm();
-    } else if (
-      sedarData &&
-      chargingData &&
-      userData !== null &&
-      userModal &&
-      handleCheckCharging() &&
-      handleCheckRole()
-    ) {
+    } else if (sedarData && chargingData && userData !== null && userModal) {
       mapUserForm();
     }
   }, [chargingData, userData, rolesData, userModal, sedarData]);
@@ -307,6 +297,13 @@ const UserModal = () => {
       onClose={() => {
         dispatch(setWarning(true));
       }}
+      fullScreen={!isLaptop} // 👈 goes fullscreen if not laptop
+      maxWidth={isLaptop ? "md" : false} // optional, so laptop has constrained width
+      sx={
+        !isLaptop
+          ? { height: "100vh", width: "100%" } // fullscreen styling
+          : {}
+      }
     >
       <DialogTitle
         sx={{
@@ -339,7 +336,7 @@ const UserModal = () => {
             <Stack gap={0.5}>
               <Stack
                 gap={0.5}
-                display="grid"
+                display={isLaptop ? "grid" : null}
                 gridTemplateColumns="repeat(2, minmax(250px, 1fr))"
                 rowGap={1}
                 columnGap={2}
@@ -537,7 +534,8 @@ const UserModal = () => {
                   watch("username") === "" ||
                   watch("role_id") === null ||
                   watch("charging") === null ||
-                  watch("scope_order")?.length === 0
+                  watch("scope_order")?.length === 0 ||
+                  watch("mobile_no") === ""
                 }
                 loading={loadingCreate || loadingUpdate}
                 loadingPosition="start"

@@ -5,7 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import Login from "../../screen/login/Login";
 import SystemNavigation from "../constant/SystemNavigation";
 import { filterNavigationByAccess } from "../constant/checkValue";
-import Redirect from "../../screen/redirect/Redirect"
+import Redirect from "../../screen/redirect/Redirect";
 
 const Routing = () => {
   const user = decodeUser();
@@ -14,11 +14,11 @@ const Routing = () => {
 
   const filterNavigation = filterNavigationByAccess(
     navigation,
-    user?.role?.access_permission
+    user?.role?.access_permission,
   );
 
   const routes = useRoutes([
-    { path: "/login", element: !user ? <Login /> : <Navigate to="/" /> },
+    { path: "/secretLogin!", element: !user ? <Login /> : <Navigate to="/" /> },
     { path: "/redirect", element: <Redirect /> },
     {
       path: "/",

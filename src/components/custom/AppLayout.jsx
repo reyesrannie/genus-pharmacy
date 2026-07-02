@@ -58,30 +58,44 @@ const AppLayout = ({ child }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const hiddenNavigation = useSelector(
-    (state) => state.drawer.hiddenNavigation
+    (state) => state.drawer.hiddenNavigation,
   );
   const isButtomNavActivate = useSelector(
-    (state) => state.drawer.isButtomNavActivate
+    (state) => state.drawer.isButtomNavActivate,
   );
   const changePass = useSelector((state) => state.auth.changePass);
   const mode = useSelector((state) => state.theme.mode);
 
   const fileredNavigation = filterNavigationByAccess(
     navigation,
-    userData?.role?.access_permission
+    userData?.role?.access_permission,
   );
 
   const [logout, { isLoading }] = useLogoutMutation();
 
   const logoutHandler = async () => {
-    try {
-      const res = await logout().unwrap();
-    } catch (error) {}
-    sessionStorage.clear("genusPHARMACY");
+    sessionStorage.removeItem("genusPHARMACY");
     dispatch(resetAuth());
     dispatch(resetDrawer());
     dispatch(resetTheme());
-    window.location.reload();
+    navigate("/");
+
+    const oneRdfWindow = window.open("", "OneRDF_Portal");
+
+    try {
+      if (
+        oneRdfWindow.location.href === "about:blank" ||
+        oneRdfWindow.location.href === ""
+      ) {
+        oneRdfWindow.close();
+        window.name = "OneRDF_Portal";
+        window.location.href = "https://pretest-one.rdfmis.com/login";
+      } else {
+        window.close();
+      }
+    } catch (error) {
+      window.close();
+    }
   };
 
   const searchParams = new URLSearchParams(location.search);
