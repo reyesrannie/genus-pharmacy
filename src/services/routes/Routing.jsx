@@ -18,7 +18,8 @@ const Routing = () => {
   );
 
   const routes = useRoutes([
-    { path: "/secretLogin!", element: !user ? <Login /> : <Navigate to="/" /> },
+    // { path: "/secretLogin!", element: !user ? <Login /> : <Navigate to="/" /> },
+    { path: "/login", element: !user ? <Login /> : <Navigate to="/" /> },
     { path: "/redirect", element: <Redirect /> },
     {
       path: "/",

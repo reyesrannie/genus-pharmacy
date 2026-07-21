@@ -203,15 +203,17 @@ const MaterialsModal = () => {
       warehouse_id:
         warehouseData?.find((item) => item?.id === materials?.warehouse?.id) ||
         null,
+      account_title: materials?.account_title?.map((item) => {
+        return (
+          accountTitleData?.find(
+            (account) =>
+              account?.id?.toString() === item?.account_title_id?.toString(),
+          ) || null
+        );
+      }),
     };
-    account_title: materials?.account_title?.map((item) => {
-      return (
-        accountTitleData?.find(
-          (account) => account?.id === item?.account_title_id,
-        ) || null
-      );
-    }),
-      Object.entries(mapped).forEach(([key, value]) => setValue(key, value));
+
+    Object.entries(mapped).forEach(([key, value]) => setValue(key, value));
     running.current = false;
   };
 

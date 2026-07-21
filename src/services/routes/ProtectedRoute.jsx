@@ -17,7 +17,7 @@ import AppLayout from "../../components/custom/AppLayout";
 
 const ProtectedRoute = ({
   isAuthenticated,
-  redirectPath = "https://pretest-one.rdfmis.com",
+  redirectPath = "https://one.rdfmis.com",
 }) => {
   useEffect(() => {
     if (!isAuthenticated) {
